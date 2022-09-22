@@ -86,5 +86,6 @@ int main()
     cout << "projW + perpW != w  = " << notEqual << endl;
     cout << "angle               = " << angleDegrees << endl;
 
+    system("pause");
     return 0;
 }
