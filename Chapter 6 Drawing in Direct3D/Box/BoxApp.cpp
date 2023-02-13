@@ -349,7 +349,7 @@ void BoxApp::BuildRootSignature()
 
 void BoxApp::BuildShadersAndInputLayout()
 {
-    HRESULT hr = S_OK;
+    ////HRESULT hr = S_OK;
     
 	mvsByteCode = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
 	mpsByteCode = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
@@ -438,7 +438,7 @@ void BoxApp::BuildPSO()
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
     ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
     psoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
-    psoDesc.pRootSignature = mRootSignature.Get();
+    psoDesc.pRootSignature = mRootSignature.Get(); 
     psoDesc.VS = 
 	{ 
 		reinterpret_cast<BYTE*>(mvsByteCode->GetBufferPointer()), 
