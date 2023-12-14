@@ -216,7 +216,8 @@ void PickingApp::OnResize()
 
 	mCamera.SetLens(0.25f*MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
 }
-
+#include <string>
+using namespace std;
 void PickingApp::Update(const GameTimer& gt)
 {
     OnKeyboardInput(gt);
@@ -230,6 +231,8 @@ void PickingApp::Update(const GameTimer& gt)
     if(mCurrFrameResource->Fence != 0 && mFence->GetCompletedValue() < mCurrFrameResource->Fence)
     {
         HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
+		//wstring fpsStr = to_wstring(mCurrFrameResource->Fence) + L" ";
+		//OutputDebugString(fpsStr.c_str());
         ThrowIfFailed(mFence->SetEventOnCompletion(mCurrFrameResource->Fence, eventHandle));
         WaitForSingleObject(eventHandle, INFINITE);
         CloseHandle(eventHandle);
@@ -302,7 +305,7 @@ void PickingApp::Draw(const GameTimer& gt)
     mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
     // Swap the back and front buffers
-    ThrowIfFailed(mSwapChain->Present(0, 0));
+    ThrowIfFailed(mSwapChain->Present(1, 0));
 	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 
     // Advance the fence value to mark commands up to this fence point.
@@ -471,6 +474,7 @@ void PickingApp::LoadTextures()
 		defaultDiffuseTex->Resource, defaultDiffuseTex->UploadHeap));
 	
 	mTextures[defaultDiffuseTex->Name] = std::move(defaultDiffuseTex);
+	//mTextures[defaultDiffuseTex->Name] = defaultDiffuseTex;
 }
 
 void PickingApp::BuildRootSignature()

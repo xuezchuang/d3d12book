@@ -280,7 +280,7 @@ void TexColumnsApp::Draw(const GameTimer& gt)
     mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
     // Swap the back and front buffers
-    ThrowIfFailed(mSwapChain->Present(0, 0));
+    ThrowIfFailed(mSwapChain->Present(1, 0));
 	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 
     // Advance the fence value to mark commands up to this fence point.
@@ -453,22 +453,22 @@ void TexColumnsApp::LoadTextures()
 	bricksTex->Name = "bricksTex";
 	bricksTex->Filename = L"../../Textures/bricks.dds";
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
-		mCommandList.Get(), bricksTex->Filename.c_str(),
-		bricksTex->Resource, bricksTex->UploadHeap));
+				  mCommandList.Get(), bricksTex->Filename.c_str(),
+				  bricksTex->Resource, bricksTex->UploadHeap));
 
 	auto stoneTex = std::make_unique<Texture>();
 	stoneTex->Name = "stoneTex";
 	stoneTex->Filename = L"../../Textures/stone.dds";
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
-		mCommandList.Get(), stoneTex->Filename.c_str(),
-		stoneTex->Resource, stoneTex->UploadHeap));
+				  mCommandList.Get(), stoneTex->Filename.c_str(),
+				  stoneTex->Resource, stoneTex->UploadHeap));
 
 	auto tileTex = std::make_unique<Texture>();
 	tileTex->Name = "tileTex";
 	tileTex->Filename = L"../../Textures/tile.dds";
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
-		mCommandList.Get(), tileTex->Filename.c_str(),
-		tileTex->Resource, tileTex->UploadHeap));
+				  mCommandList.Get(), tileTex->Filename.c_str(),
+				  tileTex->Resource, tileTex->UploadHeap));
 
 	mTextures[bricksTex->Name] = std::move(bricksTex);
 	mTextures[stoneTex->Name] = std::move(stoneTex);

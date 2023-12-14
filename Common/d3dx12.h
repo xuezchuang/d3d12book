@@ -582,6 +582,28 @@ struct CD3DX12_RESOURCE_BARRIER : public D3D12_RESOURCE_BARRIER
 };
 
 //------------------------------------------------------------------------------------------------
+struct CD3DX12_SHADER_BYTECODE : public D3D12_SHADER_BYTECODE
+{
+	CD3DX12_SHADER_BYTECODE() = default;
+	explicit CD3DX12_SHADER_BYTECODE(const D3D12_SHADER_BYTECODE& o) :
+		D3D12_SHADER_BYTECODE(o)
+	{}
+	CD3DX12_SHADER_BYTECODE(
+		_In_ ID3DBlob* pShaderBlob)
+	{
+		pShaderBytecode = pShaderBlob->GetBufferPointer();
+		BytecodeLength = pShaderBlob->GetBufferSize();
+	}
+	CD3DX12_SHADER_BYTECODE(
+		const void* _pShaderBytecode,
+		SIZE_T bytecodeLength)
+	{
+		pShaderBytecode = _pShaderBytecode;
+		BytecodeLength = bytecodeLength;
+	}
+};
+
+//------------------------------------------------------------------------------------------------
 struct CD3DX12_PACKED_MIP_INFO : public D3D12_PACKED_MIP_INFO
 {
     CD3DX12_PACKED_MIP_INFO()
@@ -1407,8 +1429,7 @@ inline UINT64 UpdateSubresources(
     if (DestinationDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
     {
         CD3DX12_BOX SrcBox( UINT( pLayouts[0].Offset ), UINT( pLayouts[0].Offset + pLayouts[0].Footprint.Width ) );
-        pCmdList->CopyBufferRegion(
-            pDestinationResource, 0, pIntermediate, pLayouts[0].Offset, pLayouts[0].Footprint.Width);
+		pCmdList->CopyBufferRegion(pDestinationResource, 0, pIntermediate, pLayouts[0].Offset, pLayouts[0].Footprint.Width);
     }
     else
     {

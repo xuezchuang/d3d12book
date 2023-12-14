@@ -171,7 +171,7 @@ bool LitColumnsApp::Initialize()
 
     // Get the increment size of a descriptor in this heap type.  This is hardware specific, 
 	// so we have to query this information.
-    mCbvSrvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    //mCbvSrvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     BuildRootSignature();
     BuildShadersAndInputLayout();
@@ -242,9 +242,9 @@ void LitColumnsApp::Draw(const GameTimer& gt)
     mCommandList->RSSetViewports(1, &mScreenViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
 
-    // Indicate a state transition on the resource usage.
+	// Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+								  D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
     // Clear the back buffer and depth buffer.
     mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
@@ -262,7 +262,7 @@ void LitColumnsApp::Draw(const GameTimer& gt)
 
     // Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+								  D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
     // Done recording commands.
     ThrowIfFailed(mCommandList->Close());
@@ -272,7 +272,7 @@ void LitColumnsApp::Draw(const GameTimer& gt)
     mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
     // Swap the back and front buffers
-    ThrowIfFailed(mSwapChain->Present(0, 0));
+    ThrowIfFailed(mSwapChain->Present(1, 0));
 	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 
     // Advance the fence value to mark commands up to this fence point.
@@ -456,7 +456,7 @@ void LitColumnsApp::BuildRootSignature()
 	ComPtr<ID3DBlob> serializedRootSig = nullptr;
 	ComPtr<ID3DBlob> errorBlob = nullptr;
 	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-		serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
+											 serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
 
 	if(errorBlob != nullptr)
 	{
@@ -591,11 +591,11 @@ void LitColumnsApp::BuildShapeGeometry()
 	ThrowIfFailed(D3DCreateBlob(ibByteSize, &geo->IndexBufferCPU));
 	CopyMemory(geo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
 
-	geo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), vertices.data(), vbByteSize, geo->VertexBufferUploader);
+	geo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),mCommandList.Get(), 
+														vertices.data(), vbByteSize, geo->VertexBufferUploader);
 
-	geo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), indices.data(), ibByteSize, geo->IndexBufferUploader);
+	geo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),mCommandList.Get(),
+													   indices.data(), ibByteSize, geo->IndexBufferUploader);
 
 	geo->VertexByteStride = sizeof(Vertex);
 	geo->VertexBufferByteSize = vbByteSize;
@@ -664,11 +664,11 @@ void LitColumnsApp::BuildSkullGeometry()
 	ThrowIfFailed(D3DCreateBlob(ibByteSize, &geo->IndexBufferCPU));
 	CopyMemory(geo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
 
-	geo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), vertices.data(), vbByteSize, geo->VertexBufferUploader);
+	geo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),mCommandList.Get(), 
+														vertices.data(), vbByteSize, geo->VertexBufferUploader);
 
-	geo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), indices.data(), ibByteSize, geo->IndexBufferUploader);
+	geo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),mCommandList.Get(),
+													   indices.data(), ibByteSize, geo->IndexBufferUploader);
 
 	geo->VertexByteStride = sizeof(Vertex);
 	geo->VertexBufferByteSize = vbByteSize;
@@ -722,8 +722,8 @@ void LitColumnsApp::BuildFrameResources()
 {
     for(int i = 0; i < gNumFrameResources; ++i)
     {
-        mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
-            1, (UINT)mAllRitems.size(), (UINT)mMaterials.size()));
+		mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
+								  1, (UINT)mAllRitems.size(), (UINT)mMaterials.size()));
     }
 }
 
@@ -820,7 +820,7 @@ void LitColumnsApp::BuildRenderItems()
 		XMMATRIX leftSphereWorld = XMMatrixTranslation(-5.0f, 3.5f, -10.0f + i*5.0f);
 		XMMATRIX rightSphereWorld = XMMatrixTranslation(+5.0f, 3.5f, -10.0f + i*5.0f);
 
-		XMStoreFloat4x4(&leftCylRitem->World, rightCylWorld);
+		XMStoreFloat4x4(&leftCylRitem->World, leftCylWorld);
 		XMStoreFloat4x4(&leftCylRitem->TexTransform, brickTexTransform);
 		leftCylRitem->ObjCBIndex = objCBIndex++;
 		leftCylRitem->Mat = mMaterials["bricks0"].get();
@@ -830,7 +830,7 @@ void LitColumnsApp::BuildRenderItems()
 		leftCylRitem->StartIndexLocation = leftCylRitem->Geo->DrawArgs["cylinder"].StartIndexLocation;
 		leftCylRitem->BaseVertexLocation = leftCylRitem->Geo->DrawArgs["cylinder"].BaseVertexLocation;
 
-		XMStoreFloat4x4(&rightCylRitem->World, leftCylWorld);
+		XMStoreFloat4x4(&rightCylRitem->World, rightCylWorld);
 		XMStoreFloat4x4(&rightCylRitem->TexTransform, brickTexTransform);
 		rightCylRitem->ObjCBIndex = objCBIndex++;
 		rightCylRitem->Mat = mMaterials["bricks0"].get();

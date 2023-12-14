@@ -18,8 +18,11 @@ public:
 	void Stop();  // Call when paused.
 	void Tick();  // Call every frame.
 
-private:
+	__int64 getcurtime();
+
 	double mSecondsPerCount;
+private:
+	
 	double mDeltaTime;
 
 	__int64 mBaseTime;

@@ -113,7 +113,7 @@ void InitDirect3DApp::Draw(const GameTimer& gt)
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 	
 	// swap the back and front buffers
-	ThrowIfFailed(mSwapChain->Present(0, 0));
+	ThrowIfFailed(mSwapChain->Present(1, 0));
 	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 
 	// Wait until frame commands are complete.  This waiting is inefficient and is

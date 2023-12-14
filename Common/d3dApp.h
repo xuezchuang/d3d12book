@@ -96,13 +96,15 @@ protected:
     Microsoft::WRL::ComPtr<ID3D12Device> md3dDevice;
 
     Microsoft::WRL::ComPtr<ID3D12Fence> mFence;
-    UINT64 mCurrentFence = 0;
-	
+    UINT64 mCurrentFence = 1;
+    UINT64 mtest = 0;
+    HANDLE eventHandle = 0;
+
     Microsoft::WRL::ComPtr<ID3D12CommandQueue> mCommandQueue;
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mDirectCmdListAlloc;
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mCommandList;
 
-	static const int SwapChainBufferCount = 2;
+	static const int SwapChainBufferCount = 2u;
 	int mCurrBackBuffer = 0;
     Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
     Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;

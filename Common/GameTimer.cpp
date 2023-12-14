@@ -125,3 +125,9 @@ void GameTimer::Tick()
 	}
 }
 
+__int64 GameTimer::getcurtime()
+{
+	__int64 currTime;
+	QueryPerformanceCounter((LARGE_INTEGER*)&currTime);
+	return currTime;
+}

@@ -226,8 +226,7 @@ bool SsaoApp::Initialize()
 
 	mCamera.SetPosition(0.0f, 2.0f, -15.0f);
  
-    mShadowMap = std::make_unique<ShadowMap>(md3dDevice.Get(),
-        2048, 2048);
+	mShadowMap = std::make_unique<ShadowMap>(md3dDevice.Get(), 2048, 2048);
 
     mSsao = std::make_unique<Ssao>(
         md3dDevice.Get(),
@@ -453,7 +452,7 @@ void SsaoApp::Draw(const GameTimer& gt)
     mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
     // Swap the back and front buffers
-    ThrowIfFailed(mSwapChain->Present(0, 0));
+    ThrowIfFailed(mSwapChain->Present(1, 0));
 	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 
     // Advance the fence value to mark commands up to this fence point.

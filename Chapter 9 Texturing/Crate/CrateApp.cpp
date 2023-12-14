@@ -232,66 +232,6 @@ void CrateApp::Update(const GameTimer& gt)
 	UpdateMainPassCB(gt);
 }
 
-void CrateApp::Draw(const GameTimer& gt)
-{
-    auto cmdListAlloc = mCurrFrameResource->CmdListAlloc;
-
-    // Reuse the memory associated with command recording.
-    // We can only reset when the associated command lists have finished execution on the GPU.
-    ThrowIfFailed(cmdListAlloc->Reset());
-
-    // A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-    // Reusing the command list reuses memory.
-    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mOpaquePSO.Get()));
-
-    mCommandList->RSSetViewports(1, &mScreenViewport);
-    mCommandList->RSSetScissorRects(1, &mScissorRect);
-
-    // Indicate a state transition on the resource usage.
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-    // Clear the back buffer and depth buffer.
-    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
-    mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-    // Specify the buffers we are going to render to.
-    mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
-
-	ID3D12DescriptorHeap* descriptorHeaps[] = { mSrvDescriptorHeap.Get() };
-	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-
-	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
-
-	auto passCB = mCurrFrameResource->PassCB->Resource();
-	mCommandList->SetGraphicsRootConstantBufferView(2, passCB->GetGPUVirtualAddress());
-
-    DrawRenderItems(mCommandList.Get(), mOpaqueRitems);
-
-    // Indicate a state transition on the resource usage.
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-
-    // Done recording commands.
-    ThrowIfFailed(mCommandList->Close());
-
-    // Add the command list to the queue for execution.
-    ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-    mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-
-    // Swap the back and front buffers
-    ThrowIfFailed(mSwapChain->Present(0, 0));
-	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
-
-    // Advance the fence value to mark commands up to this fence point.
-    mCurrFrameResource->Fence = ++mCurrentFence;
-
-    // Add an instruction to the command queue to set a new fence point. 
-    // Because we are on the GPU timeline, the new fence point won't be 
-    // set until the GPU finishes processing all the commands prior to this Signal().
-    mCommandQueue->Signal(mFence.Get(), mCurrentFence);
-}
-
 void CrateApp::OnMouseDown(WPARAM btnState, int x, int y)
 {
     mLastMousePos.x = x;
@@ -453,9 +393,9 @@ void CrateApp::LoadTextures()
 	woodCrateTex->Name = "woodCrateTex";
 	woodCrateTex->Filename = L"../../Textures/WoodCrate01.dds";
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
-		mCommandList.Get(), woodCrateTex->Filename.c_str(),
-		woodCrateTex->Resource, woodCrateTex->UploadHeap));
- 
+				  mCommandList.Get(), woodCrateTex->Filename.c_str(),
+				  woodCrateTex->Resource, woodCrateTex->UploadHeap));
+
 	mTextures[woodCrateTex->Name] = std::move(woodCrateTex);
 }
 
@@ -477,14 +417,14 @@ void CrateApp::BuildRootSignature()
 
     // A root signature is an array of root parameters.
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(4, slotRootParameter,
-		(UINT)staticSamplers.size(), staticSamplers.data(),
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+											(UINT)staticSamplers.size(), staticSamplers.data(),
+											D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
     // create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
     ComPtr<ID3DBlob> serializedRootSig = nullptr;
-    ComPtr<ID3DBlob> errorBlob = nullptr;
-    HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-        serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
+	ComPtr<ID3DBlob> errorBlob = nullptr;
+	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+											 serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
 
     if(errorBlob != nullptr)
     {
@@ -501,9 +441,7 @@ void CrateApp::BuildRootSignature()
 
 void CrateApp::BuildDescriptorHeaps()
 {
-	//
-	// Create the SRV heap.
-	//
+	//Create the SRV heap.
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
 	srvHeapDesc.NumDescriptors = 1;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -591,6 +529,44 @@ void CrateApp::BuildShapeGeometry()
 	mGeometries[geo->Name] = std::move(geo);
 }
 
+void CrateApp::BuildMaterials()
+{
+	auto woodCrate = std::make_unique<Material>();
+	woodCrate->Name = "woodCrate";
+	woodCrate->MatCBIndex = 0;
+	woodCrate->DiffuseSrvHeapIndex = 0;
+	woodCrate->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	woodCrate->FresnelR0 = XMFLOAT3(0.05f, 0.05f, 0.05f);
+	woodCrate->Roughness = 0.2f;
+
+	mMaterials["woodCrate"] = std::move(woodCrate);
+}
+
+void CrateApp::BuildRenderItems()
+{
+	auto boxRitem = std::make_unique<RenderItem>();
+	boxRitem->ObjCBIndex = 0;
+	boxRitem->Mat = mMaterials["woodCrate"].get();
+	boxRitem->Geo = mGeometries["boxGeo"].get();
+	boxRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	boxRitem->IndexCount = boxRitem->Geo->DrawArgs["box"].IndexCount;
+	boxRitem->StartIndexLocation = boxRitem->Geo->DrawArgs["box"].StartIndexLocation;
+	boxRitem->BaseVertexLocation = boxRitem->Geo->DrawArgs["box"].BaseVertexLocation;
+	mAllRitems.push_back(std::move(boxRitem));
+
+	// All the render items are opaque.
+	for(auto& e : mAllRitems)
+		mOpaqueRitems.push_back(e.get());
+}
+
+void CrateApp::BuildFrameResources()
+{
+	for(int i = 0; i < gNumFrameResources; ++i)
+	{
+		mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(), 1, (UINT)mAllRitems.size(), (UINT)mMaterials.size()));
+	}
+}
+
 void CrateApp::BuildPSOs()
 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
@@ -624,45 +600,6 @@ void CrateApp::BuildPSOs()
     ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mOpaquePSO)));
 }
 
-void CrateApp::BuildFrameResources()
-{
-    for(int i = 0; i < gNumFrameResources; ++i)
-    {
-        mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
-            1, (UINT)mAllRitems.size(), (UINT)mMaterials.size()));
-    }
-}
-
-void CrateApp::BuildMaterials()
-{
-	auto woodCrate = std::make_unique<Material>();
-	woodCrate->Name = "woodCrate";
-	woodCrate->MatCBIndex = 0;
-	woodCrate->DiffuseSrvHeapIndex = 0;
-	woodCrate->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	woodCrate->FresnelR0 = XMFLOAT3(0.05f, 0.05f, 0.05f);
-	woodCrate->Roughness = 0.2f;
-
-	mMaterials["woodCrate"] = std::move(woodCrate);
-}
-
-void CrateApp::BuildRenderItems()
-{
-	auto boxRitem = std::make_unique<RenderItem>();
-	boxRitem->ObjCBIndex = 0;
-	boxRitem->Mat = mMaterials["woodCrate"].get();
-	boxRitem->Geo = mGeometries["boxGeo"].get();
-	boxRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	boxRitem->IndexCount = boxRitem->Geo->DrawArgs["box"].IndexCount;
-	boxRitem->StartIndexLocation = boxRitem->Geo->DrawArgs["box"].StartIndexLocation;
-	boxRitem->BaseVertexLocation = boxRitem->Geo->DrawArgs["box"].BaseVertexLocation;
-	mAllRitems.push_back(std::move(boxRitem));
-
-	// All the render items are opaque.
-	for(auto& e : mAllRitems)
-		mOpaqueRitems.push_back(e.get());
-}
-
 void CrateApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
 {
     UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
@@ -682,16 +619,79 @@ void CrateApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::ve
 
 		CD3DX12_GPU_DESCRIPTOR_HANDLE tex(mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 		tex.Offset(ri->Mat->DiffuseSrvHeapIndex, mCbvSrvDescriptorSize);
+		
+		//D3D12_GPU_VIRTUAL_ADDRESS SrvAddress = mTextures["woodCrateTex"]->Resource->GetGPUVirtualAddress() + ri->Mat->DiffuseSrvHeapIndex * mCbvSrvDescriptorSize;
 
         D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objectCB->GetGPUVirtualAddress() + ri->ObjCBIndex*objCBByteSize;
 		D3D12_GPU_VIRTUAL_ADDRESS matCBAddress = matCB->GetGPUVirtualAddress() + ri->Mat->MatCBIndex*matCBByteSize;
 
 		cmdList->SetGraphicsRootDescriptorTable(0, tex);
+		//cmdList->SetGraphicsRootShaderResourceView(0, SrvAddress);
         cmdList->SetGraphicsRootConstantBufferView(1, objCBAddress);
         cmdList->SetGraphicsRootConstantBufferView(3, matCBAddress);
 
         cmdList->DrawIndexedInstanced(ri->IndexCount, 1, ri->StartIndexLocation, ri->BaseVertexLocation, 0);
     }
+}
+
+void CrateApp::Draw(const GameTimer& gt)
+{
+	auto cmdListAlloc = mCurrFrameResource->CmdListAlloc;
+
+	// Reuse the memory associated with command recording.
+	// We can only reset when the associated command lists have finished execution on the GPU.
+	ThrowIfFailed(cmdListAlloc->Reset());
+
+	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
+	// Reusing the command list reuses memory.
+	ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mOpaquePSO.Get()));
+
+	mCommandList->RSSetViewports(1, &mScreenViewport);
+	mCommandList->RSSetScissorRects(1, &mScissorRect);
+
+	// Indicate a state transition on the resource usage.
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+								  D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+	// Clear the back buffer and depth buffer.
+	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+	// Specify the buffers we are going to render to.
+	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+
+	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+
+	ID3D12DescriptorHeap* descriptorHeaps[] = {mSrvDescriptorHeap.Get()};
+	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+	auto passCB = mCurrFrameResource->PassCB->Resource();
+	mCommandList->SetGraphicsRootConstantBufferView(2, passCB->GetGPUVirtualAddress());
+
+	DrawRenderItems(mCommandList.Get(), mOpaqueRitems);
+
+	// Indicate a state transition on the resource usage.
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+								  D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+
+	// Done recording commands.
+	ThrowIfFailed(mCommandList->Close());
+
+	// Add the command list to the queue for execution.
+	ID3D12CommandList* cmdsLists[] = {mCommandList.Get()};
+	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+	// Swap the back and front buffers
+	ThrowIfFailed(mSwapChain->Present(1, 0));
+	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
+
+	// Advance the fence value to mark commands up to this fence point.
+	mCurrFrameResource->Fence = ++mCurrentFence;
+
+	// Add an instruction to the command queue to set a new fence point. 
+	// Because we are on the GPU timeline, the new fence point won't be 
+	// set until the GPU finishes processing all the commands prior to this Signal().
+	mCommandQueue->Signal(mFence.Get(), mCurrentFence);
 }
 
 std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> CrateApp::GetStaticSamplers()
