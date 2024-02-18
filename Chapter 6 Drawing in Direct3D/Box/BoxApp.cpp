@@ -16,6 +16,20 @@ using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 
+
+
+/************************************************************************/
+/*1.根签名 root signature只有64 DWORD的空间.							*/
+/*Descriptor tables cost 1 DWORD each.									*/
+/*Root constants cost 1 DWORD each, since they are 32 - bit values.		*/
+/*Root descriptors(64 - bit GPU virtual addresses) cost 2 DWORDs each.	*/
+/************************************************************************/
+
+//#define ROOT_CONSTANTS
+//#define ROOT_DESCRIPTOR
+#define DESCRIPTOR_TABLE
+
+
 struct Vertex
 {
     XMFLOAT3 Pos;
@@ -146,7 +160,7 @@ void BoxApp::OnResize()
     XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f*MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
     XMStoreFloat4x4(&mProj, P);
 }
-
+XMMATRIX worldViewProj;
 void BoxApp::Update(const GameTimer& gt)
 {
     // Convert Spherical to Cartesian coordinates.
@@ -164,7 +178,7 @@ void BoxApp::Update(const GameTimer& gt)
 
     XMMATRIX world = XMLoadFloat4x4(&mWorld);
     XMMATRIX proj = XMLoadFloat4x4(&mProj);
-    XMMATRIX worldViewProj = world*view*proj;
+	worldViewProj = world*view*proj;
 
 	// Update the constant buffer with the latest worldViewProj matrix.
 	ObjectConstants objConstants;
@@ -231,8 +245,8 @@ void BoxApp::BuildConstantBuffers()
 {
 	mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1, true);
 
+#ifdef DESCRIPTOR_TABLE
 	UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
-
 	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = mObjectCB->Resource()->GetGPUVirtualAddress();
     // Offset to the ith object constant buffer in the buffer.
     int boxCBufIndex = 0;
@@ -243,6 +257,7 @@ void BoxApp::BuildConstantBuffers()
 	cbvDesc.SizeInBytes = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
 	md3dDevice->CreateConstantBufferView(&cbvDesc, mCbvHeap->GetCPUDescriptorHandleForHeapStart());
+#endif
 }
 
 void BoxApp::BuildRootSignature()
@@ -255,11 +270,16 @@ void BoxApp::BuildRootSignature()
 
 	// Root parameter can be a table, root descriptor or root constants.
 	CD3DX12_ROOT_PARAMETER slotRootParameter[1];
-
-	// Create a single descriptor table of CBVs.
+#ifdef ROOT_CONSTANTS
+	slotRootParameter[0].InitAsConstants(16, 0);
+#elif defined (ROOT_DESCRIPTOR)
+	slotRootParameter[0].InitAsConstantBufferView(0);
+#elif defined (DESCRIPTOR_TABLE)
+	//Create a single descriptor table of CBVs.
 	CD3DX12_DESCRIPTOR_RANGE cbvTable;
 	cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
+#endif
 
 	// A root signature is an array of root parameters.
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(1, slotRootParameter, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -417,9 +437,25 @@ void BoxApp::Draw(const GameTimer& gt)
 		CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+#ifdef ROOT_CONSTANTS
+	XMFLOAT4X4 m;
+	XMStoreFloat4x4(&m, XMMatrixTranspose(worldViewProj)); // 转置矩阵
+	mCommandList->SetGraphicsRoot32BitConstants(
+		0,                    // 根参数的索引
+		sizeof(XMFLOAT4X4) / sizeof(float), // 要传递的32位浮点数的数量
+		&m,                  // 指向常量的指针
+		0                     // 常量缓冲区中的偏移量（以32位浮点数为单位）
+	);
+#elif defined (ROOT_DESCRIPTOR)
+	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = mObjectCB->Resource()->GetGPUVirtualAddress();
+	mCommandList->SetGraphicsRootConstantBufferView(0, cbAddress);
+#elif defined (DESCRIPTOR_TABLE)
 	ID3D12DescriptorHeap* descriptorHeaps[] = {mCbvHeap.Get()};
 	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 	mCommandList->SetGraphicsRootDescriptorTable(0, mCbvHeap->GetGPUDescriptorHandleForHeapStart());
+#endif
+
+
 	mCommandList->SetPipelineState(mPSO.Get());
 
 	mCommandList->RSSetViewports(1, &mScreenViewport);
@@ -452,7 +488,7 @@ void BoxApp::Draw(const GameTimer& gt)
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 	// swap the back and front buffers
-	if(0)
+	if(1)
 	{
 		ComPtr<IDXGISwapChain3>				pISwapChain3;
 		ThrowIfFailed(mSwapChain.As(&pISwapChain3));
