@@ -76,10 +76,18 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\Common.hlsl" />
-    <FxCompile Include="Shaders\Default.hlsl" />
-    <FxCompile Include="Shaders\LightingUtil.hlsl" />
-    <FxCompile Include="Shaders\Sky.hlsl" />
+    <FxCompile Include="Shaders\Common.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Default.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\LightingUtil.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Sky.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Models\skull.txt" />

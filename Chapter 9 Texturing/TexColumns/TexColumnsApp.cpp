@@ -488,9 +488,11 @@ void TexColumnsApp::BuildRootSignature()
 
 	// Perfomance TIP: Order from most frequent to least frequent.
 	slotRootParameter[0].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
+	//slotRootParameter[0].InitAsShaderResourceView(0);
     slotRootParameter[1].InitAsConstantBufferView(0); // register b0
     slotRootParameter[2].InitAsConstantBufferView(1); // register b1
     slotRootParameter[3].InitAsConstantBufferView(2); // register b2
+	//slotRootParameter[3].InitAsConstants(2); // register b2
 
 	auto staticSamplers = GetStaticSamplers();
 

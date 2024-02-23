@@ -177,6 +177,24 @@ bool CrateApp::Initialize()
     mCbvSrvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
  
+	// 先定义一个ID3D12Debug接口的指针
+	ComPtr<ID3D12Debug> debugController;
+
+	//// 尝试获取ID3D12Debug接口的实例
+	//if(SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+	//{
+	//	// 启用调试层
+	//	debugController->EnableDebugLayer();
+	//}
+
+	//ComPtr<ID3D12Debug1> debugController1;
+	//if(SUCCEEDED(debugController.As(&debugController1)))
+	//{
+	//	// 设置更详细的调试信息等级
+	//	debugController1->SetEnableGPUBasedValidation(TRUE);
+	//}
+
+
 	LoadTextures();
     BuildRootSignature();
 	BuildDescriptorHeaps();
@@ -408,11 +426,13 @@ void CrateApp::BuildRootSignature()
     CD3DX12_ROOT_PARAMETER slotRootParameter[4];
 
 	// Perfomance TIP: Order from most frequent to least frequent.
-	slotRootParameter[0].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[0].InitAsDescriptorTable(1, &texTable);// , D3D12_SHADER_VISIBILITY_PIXEL);
+	//slotRootParameter[0].InitAsShaderResourceView(0);//D3D12_ROOT_PARAMETER_TYPE_SRV--纹理的srv不能使用根签名,只能用根描述表!
     slotRootParameter[1].InitAsConstantBufferView(0);
     slotRootParameter[2].InitAsConstantBufferView(1);
     slotRootParameter[3].InitAsConstantBufferView(2);
 
+	
 	auto staticSamplers = GetStaticSamplers();
 
     // A root signature is an array of root parameters.
@@ -448,9 +468,9 @@ void CrateApp::BuildDescriptorHeaps()
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSrvDescriptorHeap)));
 
-	//
-	// Fill out the heap with actual descriptors.
-	//
+	
+	 //Fill out the heap with actual descriptors.
+	
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 	auto woodCrateTex = mTextures["woodCrateTex"]->Resource;
@@ -482,7 +502,7 @@ void CrateApp::BuildShadersAndInputLayout()
 void CrateApp::BuildShapeGeometry()
 {
     GeometryGenerator geoGen;
-	GeometryGenerator::MeshData box = geoGen.CreateBox(1.0f, 1.0f, 1.0f, 3);
+	GeometryGenerator::MeshData box = geoGen.CreateBox(1.0f, 1.0f, 1.0f, 0);
  
 	SubmeshGeometry boxSubmesh;
 	boxSubmesh.IndexCount = (UINT)box.Indices32.size();
@@ -571,9 +591,7 @@ void CrateApp::BuildPSOs()
 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
 
-	//
 	// PSO for opaque objects.
-	//
     ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 	opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
 	opaquePsoDesc.pRootSignature = mRootSignature.Get();
@@ -620,8 +638,6 @@ void CrateApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::ve
 		CD3DX12_GPU_DESCRIPTOR_HANDLE tex(mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 		tex.Offset(ri->Mat->DiffuseSrvHeapIndex, mCbvSrvDescriptorSize);
 		
-		//D3D12_GPU_VIRTUAL_ADDRESS SrvAddress = mTextures["woodCrateTex"]->Resource->GetGPUVirtualAddress() + ri->Mat->DiffuseSrvHeapIndex * mCbvSrvDescriptorSize;
-
         D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objectCB->GetGPUVirtualAddress() + ri->ObjCBIndex*objCBByteSize;
 		D3D12_GPU_VIRTUAL_ADDRESS matCBAddress = matCB->GetGPUVirtualAddress() + ri->Mat->MatCBIndex*matCBByteSize;
 
@@ -638,12 +654,12 @@ void CrateApp::Draw(const GameTimer& gt)
 {
 	auto cmdListAlloc = mCurrFrameResource->CmdListAlloc;
 
-	// Reuse the memory associated with command recording.
-	// We can only reset when the associated command lists have finished execution on the GPU.
+	/* Reuse the memory associated with command recording.										*/
+	/* We can only reset when the associated command lists have finished execution on the GPU.	*/
 	ThrowIfFailed(cmdListAlloc->Reset());
 
-	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-	// Reusing the command list reuses memory.
+	/* A command list can be reset after it has been added to the command queue via ExecuteCommandList.	*/
+	/* Reusing the command list reuses memory.															*/
 	ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mOpaquePSO.Get()));
 
 	mCommandList->RSSetViewports(1, &mScreenViewport);

@@ -101,14 +101,14 @@ void Waves::Update(float dt)
 		{
 			for(int j = 1; j < mNumCols-1; ++j)
 			{
-				// After this update we will be discarding the old previous
-				// buffer, so overwrite that buffer with the new update.
-				// Note how we can do this inplace (read/write to same element) 
-				// because we won't need prev_ij again and the assignment happens last.
+				/* After this update we will be discarding the old previous				*/
+				/* buffer, so overwrite that buffer with the new update.				*/
+				/* Note how we can do this inplace (read/write to same element) 		*/
+				/* because we won't need prev_ij again and the assignment happens last.	*/
 
-				// Note j indexes x and i indexes z: h(x_j, z_i, t_k)
-				// Moreover, our +z axis goes "down"; this is just to 
-				// keep consistent with our row indices going down.
+				/* Note j indexes x and i indexes z: h(x_j, z_i, t_k)	*/
+				/* Moreover, our +z axis goes "down"; this is just to 	*/
+				/* keep consistent with our row indices going down.		*/
 
 				mPrevSolution[i*mNumCols+j].y = 
 					mK1*mPrevSolution[i*mNumCols+j].y +
@@ -120,9 +120,9 @@ void Waves::Update(float dt)
 			}
 		});
 
-		// We just overwrote the previous buffer with the new data, so
-		// this data needs to become the current solution and the old
-		// current solution becomes the new previous solution.
+		/* We just overwrote the previous buffer with the new data, so	*/
+		/* this data needs to become the current solution and the old	*/
+		/* current solution becomes the new previous solution.			*/
 		std::swap(mPrevSolution, mCurrSolution);
 
 		t = 0.0f; // reset time

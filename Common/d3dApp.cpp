@@ -301,12 +301,12 @@ bool D3DApp::InitMainWindow()
 bool D3DApp::InitDirect3D()
 {
 
-#if defined(DEBUG) || defined(_DEBUG) 
-	// Enable the D3D12 debug layer.
-	ComPtr<ID3D12Debug> debugController;
-	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
-	debugController->EnableDebugLayer();
-#endif
+//#if defined(DEBUG) || defined(_DEBUG) 
+//	// Enable the D3D12 debug layer.
+//	ComPtr<ID3D12Debug> debugController;
+//	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
+//	debugController->EnableDebugLayer();
+//#endif
 
 	ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&mdxgiFactory)));
 
@@ -624,14 +624,14 @@ void D3DApp::CalculateFrameStats()
 		float fps = (float)frameCnt; // fps = frameCnt / 1
 		float mspf = 1000.0f / fps;
 
-		GRS_PRINTF(_T("fps:%.2f , mspf:%.2f.Present:%d,cpu:%d,²î¾à:%d \n"), fps, mspf, stats.PresentCount, PresentID, PresentID - stats.PresentCount);
+		//GRS_PRINTF(_T("fps:%.2f , mspf:%.2f.Present:%d,cpu:%d,²î¾à:%d \n"), fps, mspf, stats.PresentCount, PresentID, PresentID - stats.PresentCount);
 
 		wstring fpsStr = to_wstring(fps);
 		wstring mspfStr = to_wstring(mspf);
 
-		wstring windowText = mMainWndCaption +
-			L"    fps: " + fpsStr +
-			L"   mspf: " + mspfStr;
+		//wstring windowText = mMainWndCaption +
+		//	L"    fps: " + fpsStr +
+		//	L"   mspf: " + mspfStr;
 
 		//SetWindowText(mhMainWnd, windowText.c_str());
 

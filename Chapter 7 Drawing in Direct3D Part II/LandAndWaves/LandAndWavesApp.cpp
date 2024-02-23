@@ -184,7 +184,7 @@ bool LandAndWavesApp::Initialize()
 	BuildLandGeometry();
     BuildWavesGeometryBuffers();
     BuildRenderItems();
-	BuildRenderItems();
+	//BuildRenderItems();
     BuildFrameResources();
 	BuildPSOs();
 
@@ -345,9 +345,9 @@ void LandAndWavesApp::OnMouseMove(WPARAM btnState, int x, int y)
 void LandAndWavesApp::OnKeyboardInput(const GameTimer& gt)
 {
     if(GetAsyncKeyState('1') & 0x8000)
-        mIsWireframe = true;
-    else
         mIsWireframe = false;
+    else
+        mIsWireframe = true;
 }
 
 void LandAndWavesApp::UpdateCamera(const GameTimer& gt)
@@ -635,9 +635,7 @@ void LandAndWavesApp::BuildPSOs()
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
 
-	//
 	// PSO for opaque objects.
-	//
 	ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 	opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
 	opaquePsoDesc.pRootSignature = mRootSignature.Get();
@@ -663,10 +661,7 @@ void LandAndWavesApp::BuildPSOs()
 	opaquePsoDesc.DSVFormat = mDepthStencilFormat;
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mPSOs["opaque"])));
 
-    //
     // PSO for opaque wireframe objects.
-    //
-
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaqueWireframePsoDesc = opaquePsoDesc;
     opaqueWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
     ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&mPSOs["opaque_wireframe"])));
@@ -705,10 +700,10 @@ void LandAndWavesApp::BuildRenderItems()
 	gridRitem->StartIndexLocation = gridRitem->Geo->DrawArgs["grid"].StartIndexLocation;
 	gridRitem->BaseVertexLocation = gridRitem->Geo->DrawArgs["grid"].BaseVertexLocation;
 
-	mRitemLayer[(int)RenderLayer::Opaque].push_back(gridRitem.get());
+	//mRitemLayer[(int)RenderLayer::Opaque].push_back(gridRitem.get());
 
 	mAllRitems.push_back(std::move(wavesRitem));
-	mAllRitems.push_back(std::move(gridRitem));
+	//mAllRitems.push_back(std::move(gridRitem));
 }
 
 void LandAndWavesApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
