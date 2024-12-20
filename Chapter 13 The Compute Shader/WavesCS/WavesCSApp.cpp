@@ -8,6 +8,7 @@
 #include "../../Common/GeometryGenerator.h"
 #include "FrameResource.h"
 #include "GpuWaves.h"
+#include "../../Common/DDSTextureLoader.h"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -610,13 +611,13 @@ void WavesCSApp::BuildRootSignature()
 void WavesCSApp::BuildWavesRootSignature()
 {
 	CD3DX12_DESCRIPTOR_RANGE uavTable0;
-	uavTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+	uavTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
 	CD3DX12_DESCRIPTOR_RANGE uavTable1;
-	uavTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 1);
+	uavTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 
 	CD3DX12_DESCRIPTOR_RANGE uavTable2;
-	uavTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 2);
+	uavTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 
 	// Root parameter can be a table, root descriptor or root constants.
 	CD3DX12_ROOT_PARAMETER slotRootParameter[4];

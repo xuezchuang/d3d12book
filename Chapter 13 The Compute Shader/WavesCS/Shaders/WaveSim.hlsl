@@ -18,9 +18,12 @@ cbuffer cbUpdateSettings
 	int2 gDisturbIndex;
 };
  
-RWTexture2D<float> gPrevSolInput : register(u0);
-RWTexture2D<float> gCurrSolInput : register(u1);
-RWTexture2D<float> gOutput       : register(u2);
+//RWTexture2D<float> gPrevSolInput : register(u0);
+//RWTexture2D<float> gCurrSolInput : register(u1);
+
+Texture2D<float> gPrevSolInput : register(t0);
+Texture2D<float> gCurrSolInput : register(t1);
+RWTexture2D<float> gOutput       : register(u0);
  
 [numthreads(16, 16, 1)]
 void UpdateWavesCS(int3 dispatchThreadID : SV_DispatchThreadID)
