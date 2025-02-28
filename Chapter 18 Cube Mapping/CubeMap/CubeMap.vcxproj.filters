@@ -91,6 +91,5 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="Models\skull.txt" />
-    <Text Include="Models\car.txt" />
   </ItemGroup>
 </Project>

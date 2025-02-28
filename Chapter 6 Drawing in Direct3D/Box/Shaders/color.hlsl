@@ -19,24 +19,49 @@ struct VertexOut
 {
 	float4 PosH  : SV_POSITION;
     float4 Color : COLOR;
+	float2 uv : TEXCOORD0;
 };
 
-VertexOut VS(VertexIn vin)
-{
-	VertexOut vout;
+//VertexOut VS(VertexIn vin)
+//{
+//	VertexOut vout;
 	
-	// Transform to homogeneous clip space.
-	vout.PosH = mul(float4(vin.PosL, 1.0f), gWorldViewProj);
+//	// Transform to homogeneous clip space.
+//	vout.PosH = mul(float4(vin.PosL, 1.0f), gWorldViewProj);
 	
-	// Just pass vertex color into the pixel shader.
-    vout.Color = vin.Color;
+//	// Just pass vertex color into the pixel shader.
+//    vout.Color = vin.Color;
     
-    return vout;
+//    return vout;
+//}
+
+VertexOut VS(uint VertexId : SV_VertexID)
+{
+	VertexOut output = (VertexOut) 0.0f;
+	output.uv = float2((VertexId << 1) & 2, VertexId & 2);
+	output.PosH = float4(output.uv * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), 0.0f, 1.0f);
+	return output;
 }
 
 float4 PS(VertexOut pin) : SV_Target
 {
-    return pin.Color;
+	//if (pin.PosH.x < 400 && pin.PosH.y < 300)
+	//	return float4(1.f, 0.0f, 0, 1);
+	//else if (pin.PosH.x < 400 && pin.PosH.y > 300)
+	//	return float4(0.f, 1.0f, 0, 1);
+	//else if (pin.PosH.x > 400 && pin.PosH.y < 300)
+	//	return float4(0.f, 0.0f, 1, 1);
+	//else
+	//	return float4(1, 1, 1, 1);
+	
+	if (pin.uv.x < 0.5 && pin.uv.y < 0.5)
+		return float4(1.f, 0.0f, 0, 1);
+	else if (pin.uv.x < 0.5 && pin.uv.y > 0.5)
+		return float4(0.f, 1.0f, 0, 1);
+	else if (pin.uv.x > 0.5 && pin.uv.y < 0.5)
+		return float4(0.f, 0.0f, 1, 1);
+	else
+		return float4(1, 1, 1, 1);
 }
 
 

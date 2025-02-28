@@ -6,7 +6,7 @@
 
 
  // Include structures and functions for lighting.
-#include "LightingUtil.hlsl"
+//#include "LightingUtil.hlsl"
 
 //Texture2D    gDiffuseMap : register(t0);
 
@@ -53,7 +53,7 @@ cbuffer cbPass : register(b1)
 	// indices [NUM_DIR_LIGHTS, NUM_DIR_LIGHTS+NUM_POINT_LIGHTS) are point lights;
 	// indices [NUM_DIR_LIGHTS+NUM_POINT_LIGHTS, NUM_DIR_LIGHTS+NUM_POINT_LIGHT+NUM_SPOT_LIGHTS)
 	// are spot lights for a maximum of MaxLights per object.
-	Light gLights[MaxLights];
+	//Light gLights[MaxLights];
 };
 
 cbuffer cbMaterial : register(b2)

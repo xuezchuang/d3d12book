@@ -301,7 +301,7 @@ void WavesCSApp::Draw(const GameTimer& gt)
 	auto passCB = mCurrFrameResource->PassCB->Resource();
 	mCommandList->SetGraphicsRootConstantBufferView(2, passCB->GetGPUVirtualAddress());
 
-	//mCommandList->SetGraphicsRootDescriptorTable(4, mWaves->DisplacementMap());
+	mCommandList->SetGraphicsRootDescriptorTable(4, mWaves->DisplacementMap());
 
     DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Opaque]);
 
@@ -311,7 +311,7 @@ void WavesCSApp::Draw(const GameTimer& gt)
 	mCommandList->SetPipelineState(mPSOs["transparent"].Get());
 	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Transparent]);
 
-	mCommandList->SetGraphicsRootDescriptorTable(4, mWaves->DisplacementMap());
+	//mCommandList->SetGraphicsRootDescriptorTable(4, mWaves->DisplacementMap());
 
 	mCommandList->SetPipelineState(mPSOs["wavesRender"].Get());
 	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::GpuWaves]);

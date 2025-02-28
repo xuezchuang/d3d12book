@@ -9,6 +9,7 @@
 #include "FrameResource.h"
 #include "Waves.h"
 #include "BlurFilter.h"
+#include "../../Common/DDSTextureLoader.h"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -311,7 +312,7 @@ void BlurApp::Draw(const GameTimer& gt)
 	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Transparent]);
 
 	mBlurFilter->Execute(mCommandList.Get(), mPostProcessRootSignature.Get(),
-						 mPSOs["horzBlur"].Get(), mPSOs["vertBlur"].Get(), CurrentBackBuffer(), 4);
+						 mPSOs["horzBlur"].Get(), mPSOs["vertBlur"].Get(), CurrentBackBuffer(), 1);
 
 	// Prepare to copy blurred output to the back buffer.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
@@ -637,7 +638,7 @@ void BlurApp::BuildPostProcessRootSignature()
 	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
 
 	// Perfomance TIP: Order from most frequent to least frequent.
-	slotRootParameter[0].InitAsConstants(12, 0);
+	slotRootParameter[0].InitAsBufferCBVInitAsConstants(12, 0);
 	slotRootParameter[1].InitAsDescriptorTable(1, &srvTable);
 	slotRootParameter[2].InitAsDescriptorTable(1, &uavTable);
 

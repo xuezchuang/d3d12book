@@ -10,6 +10,7 @@
 #include "GpuWaves.h"
 #include "SobelFilter.h"
 #include "RenderTarget.h"
+#include "../../Common/DDSTextureLoader.h"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -307,7 +308,7 @@ void SobelApp::Update(const GameTimer& gt)
         CloseHandle(eventHandle);
     }
 
-	AnimateMaterials(gt);
+	//AnimateMaterials(gt);
 	UpdateObjectCBs(gt);
 	UpdateMaterialCBs(gt);
 	UpdateMainPassCB(gt);
@@ -353,10 +354,10 @@ void SobelApp::Draw(const GameTimer& gt)
 
 	mCommandList->SetGraphicsRootDescriptorTable(4, mWaves->DisplacementMap());
 
-    DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Opaque]);
+    //DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Opaque]);
 
-	mCommandList->SetPipelineState(mPSOs["alphaTested"].Get());
-	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::AlphaTested]);
+	//mCommandList->SetPipelineState(mPSOs["alphaTested"].Get());
+	//DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::AlphaTested]);
 
 	mCommandList->SetPipelineState(mPSOs["transparent"].Get());
 	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Transparent]);
@@ -1222,6 +1223,7 @@ void SobelApp::BuildRenderItems()
     auto wavesRitem = std::make_unique<RenderItem>();
     wavesRitem->World = MathHelper::Identity4x4();
 	XMStoreFloat4x4(&wavesRitem->TexTransform, XMMatrixScaling(5.0f, 5.0f, 1.0f));
+	//XMStoreFloat4x4(&wavesRitem->TexTransform, XMMatrixScaling(1.0f, 1.0f, 1.0f));
 	wavesRitem->DisplacementMapTexelSize.x = 1.0f / mWaves->ColumnCount();
 	wavesRitem->DisplacementMapTexelSize.y = 1.0f / mWaves->RowCount();
 	wavesRitem->GridSpatialStep = mWaves->SpatialStep();

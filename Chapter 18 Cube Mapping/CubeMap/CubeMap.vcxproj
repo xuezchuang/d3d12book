@@ -181,9 +181,6 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Models\car.txt">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </Text>
     <Text Include="Models\skull.txt">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </Text>

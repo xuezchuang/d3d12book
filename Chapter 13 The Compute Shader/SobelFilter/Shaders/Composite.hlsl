@@ -36,7 +36,8 @@ VertexOut VS(uint vid : SV_VertexID)
 	
 	vout.TexC = gTexCoords[vid];
 	
-	// Map [0,1]^2 to NDC space.
+	// Map [0,1]^2 to NDC space. ?这儿注释有问题?? SV_POSITION进入PS阶段的坐标系,叫裁剪空间坐标系.?
+	// 裁剪空间/w就是ndc坐标?
 	vout.PosH = float4(2.0f*vout.TexC.x - 1.0f, 1.0f - 2.0f*vout.TexC.y, 0.0f, 1.0f);
 
     return vout;

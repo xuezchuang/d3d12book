@@ -233,8 +233,10 @@ void GpuWaves::Update(
 		// Set the update constants.
 		cmdList->SetComputeRoot32BitConstants(0, 3, mK, 0);
 
-		cmdList->SetComputeRootDescriptorTable(1, mPrevSolUav);
-		cmdList->SetComputeRootDescriptorTable(2, mCurrSolUav);
+		cmdList->SetComputeRootDescriptorTable(1, mPrevSolSrv);
+		cmdList->SetComputeRootDescriptorTable(2, mCurrSolSrv);
+		//cmdList->SetComputeRootDescriptorTable(1, mPrevSolUav);
+		//cmdList->SetComputeRootDescriptorTable(2, mCurrSolUav);
 		cmdList->SetComputeRootDescriptorTable(3, mNextSolUav);
 
 		// How many groups do we need to dispatch to cover the wave grid.  
