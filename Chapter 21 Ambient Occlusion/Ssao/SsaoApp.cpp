@@ -11,6 +11,8 @@
 #include "ShadowMap.h"
 #include "Ssao.h"
 #include "../../Common/DDSTextureLoader.h"
+#include <chrono>
+#include <string>
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace DirectX::PackedVector;
@@ -304,12 +306,23 @@ void SsaoApp::Update(const GameTimer& gt)
 
     // Has the GPU finished processing the commands of the current frame resource?
     // If not, wait until the GPU has completed commands up to this fence point.
+
+	auto start = std::chrono::high_resolution_clock::now();
+
     if(mCurrFrameResource->Fence != 0 && mFence->GetCompletedValue() < mCurrFrameResource->Fence)
     {
         HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
         ThrowIfFailed(mFence->SetEventOnCompletion(mCurrFrameResource->Fence, eventHandle));
         WaitForSingleObject(eventHandle, INFINITE);
         CloseHandle(eventHandle);
+
+		auto end = std::chrono::high_resolution_clock::now();
+		float mCPUWaitGPUTimeMs1 = std::chrono::duration<float, std::milli>(end - start).count();
+
+		std::wstring fpsStr = std::to_wstring(mCPUWaitGPUTimeMs1);
+		std::wstring windowText = mMainWndCaption +
+			L"    fps: " + fpsStr;
+		//SetWindowText(mhMainWnd, windowText.c_str());
     }
 
     //
@@ -1625,10 +1638,20 @@ void SsaoApp::Draw(const GameTimer& gt)
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
+	auto start = std::chrono::high_resolution_clock::now();
+	// 
 	// Swap the back and front buffers
 	ThrowIfFailed(mSwapChain->Present(1, 0));
 	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 
+	auto end = std::chrono::high_resolution_clock::now();
+	float mCPUWaitGPUTimeMs1 = std::chrono::duration<float, std::milli>(end - start).count();
+
+	std::wstring fpsStr = std::to_wstring(1000.0/mCPUWaitGPUTimeMs1);
+	std::wstring windowText = mMainWndCaption +
+		L"    fps: " + fpsStr;
+	SetWindowText(mhMainWnd, windowText.c_str());
+	// 
 	// Advance the fence value to mark commands up to this fence point.
 	mCurrFrameResource->Fence = ++mCurrentFence;
 

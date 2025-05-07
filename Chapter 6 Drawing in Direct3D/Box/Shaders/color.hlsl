@@ -45,23 +45,23 @@ VertexOut VS(uint VertexId : SV_VertexID)
 
 float4 PS(VertexOut pin) : SV_Target
 {
-	//if (pin.PosH.x < 400 && pin.PosH.y < 300)
-	//	return float4(1.f, 0.0f, 0, 1);
-	//else if (pin.PosH.x < 400 && pin.PosH.y > 300)
-	//	return float4(0.f, 1.0f, 0, 1);
-	//else if (pin.PosH.x > 400 && pin.PosH.y < 300)
-	//	return float4(0.f, 0.0f, 1, 1);
-	//else
-	//	return float4(1, 1, 1, 1);
-	
-	if (pin.uv.x < 0.5 && pin.uv.y < 0.5)
+	if (pin.PosH.x < 400 && pin.PosH.y < 300)
 		return float4(1.f, 0.0f, 0, 1);
-	else if (pin.uv.x < 0.5 && pin.uv.y > 0.5)
+	else if (pin.PosH.x < 400 && pin.PosH.y > 300)
 		return float4(0.f, 1.0f, 0, 1);
-	else if (pin.uv.x > 0.5 && pin.uv.y < 0.5)
+	else if (pin.PosH.x > 400 && pin.PosH.y < 300)
 		return float4(0.f, 0.0f, 1, 1);
 	else
 		return float4(1, 1, 1, 1);
+	
+	//if (pin.uv.x < 0.5 && pin.uv.y < 0.5)
+	//	return float4(1.f, 0.0f, 0, 1);
+	//else if (pin.uv.x < 0.5 && pin.uv.y > 0.5)
+	//	return float4(0.f, 1.0f, 0, 1);
+	//else if (pin.uv.x > 0.5 && pin.uv.y < 0.5)
+	//	return float4(0.f, 0.0f, 1, 1);
+	//else
+	//	return float4(1, 1, 1, 1);
 }
 
 
